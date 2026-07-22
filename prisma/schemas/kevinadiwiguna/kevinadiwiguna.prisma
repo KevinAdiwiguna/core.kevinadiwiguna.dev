@@ -12,17 +12,6 @@ enum ProjectStatus {
   COMPLETED
 }
 
-model Verification {
-  id         String   @id @default(cuid())
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("verification")
-}
-
 model Project {
   id               String        @id @default(cuid())
   title            String
@@ -37,48 +26,48 @@ model Project {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  technologies     Technology[]
-  categories       Category[]
+  technologies Technology[]
+  categories   Category[]
 }
 
 model Technology {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String    @id @default(cuid())
+  name        String    @unique
   icon        String?
   category    String?
   proficiency Int?
   projects    Project[]
 }
 
-model Post {
-  id          String    @id @default(cuid())
-  title       String
-  slug        String    @unique
-  content     String    @db.Text
-  image       String?
-  excerpt     String?
-  published   Boolean   @default(false)
-  readTime    Int?
-  views       Int       @default(0)
-  authorId    String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model Blogs {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  image     String?
+  excerpt   String?
+  published Boolean  @default(false)
+  readTime  Int?
+  views     Int      @default(0)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  tags        Tag[]
-  categories  Category[]
+  tags       Tag[]
+  categories Category[]
 }
 
 model Category {
   id       String    @id @default(cuid())
   name     String    @unique
   projects Project[]
-  posts    Post[]
+  blogs    Blogs[]
 }
 
 model Tag {
-  id    String @id @default(cuid())
-  name  String @unique
-  posts Post[]
+  id    String  @id @default(cuid())
+  name  String  @unique
+  blogs Blogs[]
 }
 
 model Experience {

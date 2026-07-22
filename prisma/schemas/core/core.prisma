@@ -86,7 +86,6 @@ model Project {
   status      ProjectStatus @default(DEVELOPMENT)
 
   dbUrl       String?
-
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 

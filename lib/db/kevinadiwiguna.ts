@@ -1,15 +1,23 @@
 import { PrismaClient } from "@/app/generated/prisma/kevinadiwiguna/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-const adapter = new PrismaPg({
-  connectionString: process.env.PPG_USER_DATABASE_URL,
-});
+import { Pool } from "pg";
+
+const connectionString = process.env.DATABASE_URL_KEVINADIWIGUNA;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
 const getPrisma = () =>
   new PrismaClient({
     adapter,
   });
-const globalForUserDBPrismaClient = global as unknown as {
-  userDBPrismaClient: ReturnType<typeof getPrisma>;
+
+const globalForKevinDB = global as unknown as {
+  kevinadiwigunaDB: ReturnType<typeof getPrisma>;
 };
-export const kevinadiwigunaDB = globalForUserDBPrismaClient.userDBPrismaClient || getPrisma();
-if (process.env.NODE_ENV !== "production")
-  globalForUserDBPrismaClient.userDBPrismaClient = kevinadiwigunaDB;
+
+export const kevinadiwigunaDB =
+  globalForKevinDB.kevinadiwigunaDB || getPrisma();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForKevinDB.kevinadiwigunaDB = kevinadiwigunaDB;
+}
