@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../../app/generated/prisma/kevinadiwiguna"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProjectStatus {
+  ONGOING
+  COMPLETED
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  shortDescription String
+  content          String        @db.Text
+  image            String?
+  githubUrl        String?
+  liveUrl          String?
+  isFeatured       Boolean       @default(false)
+  status           ProjectStatus @default(COMPLETED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  technologies     Technology[]
+  categories       Category[]
+}
+
+model Technology {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  icon        String?
+  category    String?
+  proficiency Int?
+  projects    Project[]
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String    @db.Text
+  image       String?
+  excerpt     String?
+  published   Boolean   @default(false)
+  readTime    Int?
+  views       Int       @default(0)
+  authorId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tags        Tag[]
+  categories  Category[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  projects Project[]
+  posts    Post[]
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  posts Post[]
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  company     String
+  role        String
+  startDate   DateTime
+  endDate     DateTime?
+  description String    @db.Text
+  techUsed    String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Certification {
+  id            String   @id @default(cuid())
+  name          String
+  issuer        String
+  credentialUrl String?
+  issueDate     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  path      String
+  views     Int      @default(1)
+  updatedAt DateTime @updatedAt
+}
