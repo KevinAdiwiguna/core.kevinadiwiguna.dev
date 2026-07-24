@@ -27,8 +27,8 @@ type PostFormData = Omit<BlogPost, "id" | "views" | "createdAt" | "updatedAt"> &
 	id?: string;
 	tagIds?: string[];
 	categoryIds?: string[];
-	tagNames?: string[];
-	categoryNames?: string[];
+	tagNames?: string | string[];
+	categoryNames?: string | string[];
 };
 
 interface PostFormProps {
@@ -102,37 +102,41 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 
 	const addTag = (tag: string) => {
 		const trimmed = tag.trim();
-		if (trimmed && !formData.tagNames?.includes(trimmed)) {
+		const tags = Array.isArray(formData.tagNames) ? formData.tagNames : [];
+		if (trimmed && !tags.includes(trimmed)) {
 			setFormData((prev) => ({
 				...prev,
-				tagNames: [...(prev.tagNames || []), trimmed],
+				tagNames: [...tags, trimmed],
 			}));
 		}
 		setTagInput("");
 	};
 
 	const removeTag = (tag: string) => {
+		const tags = Array.isArray(formData.tagNames) ? formData.tagNames : [];
 		setFormData((prev) => ({
 			...prev,
-			tagNames: prev.tagNames?.filter((t) => t !== tag) || [],
+			tagNames: tags.filter((t) => t !== tag),
 		}));
 	};
 
 	const addCategory = (category: string) => {
 		const trimmed = category.trim();
-		if (trimmed && !formData.categoryNames?.includes(trimmed)) {
+		const cats = Array.isArray(formData.categoryNames) ? formData.categoryNames : [];
+		if (trimmed && !cats.includes(trimmed)) {
 			setFormData((prev) => ({
 				...prev,
-				categoryNames: [...(prev.categoryNames || []), trimmed],
+				categoryNames: [...cats, trimmed],
 			}));
 		}
 		setCategoryInput("");
 	};
 
 	const removeCategory = (category: string) => {
+		const cats = Array.isArray(formData.categoryNames) ? formData.categoryNames : [];
 		setFormData((prev) => ({
 			...prev,
-			categoryNames: prev.categoryNames?.filter((c) => c !== category) || [],
+			categoryNames: cats.filter((c) => c !== category),
 		}));
 	};
 
@@ -183,10 +187,13 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 		e.preventDefault();
 		if (!validate()) return;
 
+		const tagNames = Array.isArray(formData.tagNames) ? formData.tagNames.join(", ") : "";
+		const categoryNames = Array.isArray(formData.categoryNames) ? formData.categoryNames.join(", ") : "";
+
 		saveBlog({
 			...formData,
-			tagNames: formData.tagNames?.join(", ") || "",
-			categoryNames: formData.categoryNames?.join(", ") || "",
+			tagNames,
+			categoryNames,
 		});
 	};
 
@@ -322,7 +329,7 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 				</div>
 
 				<div className="flex flex-wrap gap-2 pt-1">
-					{formData.categoryNames?.map((category) => (
+					{Array.isArray(formData.categoryNames) && formData.categoryNames.map((category) => (
 						<span key={category} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
 							{category}
 							<button type="button" onClick={() => removeCategory(category)} className="hover:opacity-70 transition-opacity">
@@ -355,7 +362,7 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 				</div>
 
 				<div className="flex flex-wrap gap-2 pt-1">
-					{formData.tagNames?.map((tag) => (
+					{Array.isArray(formData.tagNames) && formData.tagNames.map((tag) => (
 						<span key={tag} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
 							{tag}
 							<button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70 transition-opacity">

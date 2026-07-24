@@ -13,6 +13,7 @@ export function TeamSwitcher({
 		slug: string;
 		id: string;
 		description: string | null;
+		logo?: string;
 	}[];
 }) {
 	const { isMobile } = useSidebar();
