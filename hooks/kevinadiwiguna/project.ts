@@ -15,3 +15,20 @@ export const getTotalProject = async () => {
 
     return count;
 }
+
+export const getAllProject = async () => {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const projects = await kevinadiwigunaDB.project.findMany({
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+    return projects;
+}

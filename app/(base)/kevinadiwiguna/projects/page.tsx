@@ -1,7 +1,11 @@
-import React from "react";
+import { getTotalProject, getAllProject } from "@/hooks/kevinadiwiguna/project";
+import { MainForm } from "./components/main-form";
 
-const page = () => {
-	return <div>page</div>;
+const Page = async () => {
+	const totalProjects = await getTotalProject();
+	const getAllProjects = await getAllProject();
+
+	return <MainForm totalProjects={totalProjects} getAllProjects={getAllProjects} />;
 };
 
-export default page;
+export default Page;
