@@ -34,7 +34,7 @@ export const getBlogsCount = async () => {
     return count;
 };
 
-export const getAllBlogs = async (id: string) => {
+export const getAllBlogs = async () => {
     const session = await auth.api.getSession({
         headers: await headers()
     })
@@ -43,16 +43,7 @@ export const getAllBlogs = async (id: string) => {
         throw new Error("Unauthorized");
     }
 
-    const blog = await kevinadiwigunaDB.blogs.findUnique({
-        where: {
-            id,
-        },
-        select: {
-            views: true,
-            id: true,
-            title: true,
-            slug: true,
-        },
+    const blog = await kevinadiwigunaDB.blogs.findMany({
     });
 
     return blog;
