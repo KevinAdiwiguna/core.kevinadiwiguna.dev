@@ -185,6 +185,8 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 
 		saveBlog({
 			...formData,
+			tagNames: formData.tagNames?.join(", ") || "",
+			categoryNames: formData.categoryNames?.join(", ") || "",
 		});
 	};
 
@@ -261,11 +263,7 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 											addCategory(category.name);
 										}
 									}}
-									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
-										isSelected
-											? "bg-primary text-primary-foreground"
-											: "bg-muted text-muted-foreground hover:bg-muted/80"
-									}`}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
 								>
 									{category.name}
 								</button>
@@ -292,11 +290,7 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 											addTag(tag.name);
 										}
 									}}
-									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
-										isSelected
-											? "bg-primary text-primary-foreground"
-											: "bg-muted text-muted-foreground hover:bg-muted/80"
-									}`}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
 								>
 									{tag.name}
 								</button>

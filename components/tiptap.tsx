@@ -19,7 +19,7 @@ export function Editor({ content, onChange }: EditorProps) {
 		},
 		editorProps: {
 			attributes: {
-				class: "prose prose-invert max-w-none min-h-[300px] p-4 focus:outline-none font-mono text-sm",
+				class: "prose prose-invert max-w-none min-h-[300px] p-4 focus:outline-none font-mono text-sm bg-background text-foreground border-0",
 			},
 		},
 	});
@@ -27,8 +27,8 @@ export function Editor({ content, onChange }: EditorProps) {
 	if (!editor) return null;
 
 	return (
-		<div className="border border-zinc-800 rounded-md overflow-hidden bg-zinc-950/20">
-			<div className="flex flex-wrap gap-1 p-2 border-b border-zinc-800 bg-zinc-900/50">
+		<div className="border border-input rounded-sm overflow-hidden bg-background">
+			<div className="flex flex-wrap gap-1 p-2 border-b border-input bg-muted/30">
 				<MenuButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} icon={Bold} />
 				<MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} icon={Italic} />
 				<MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} icon={Heading1} />
@@ -37,7 +37,7 @@ export function Editor({ content, onChange }: EditorProps) {
 				<MenuButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} icon={ListOrdered} />
 				<MenuButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} icon={Quote} />
 				<MenuButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive("codeBlock")} icon={Code} />
-				<div className="w-px h-6 bg-zinc-800 mx-1 self-center" />
+				<div className="w-px h-6 bg-input mx-1 self-center" />
 				<MenuButton onClick={() => editor.chain().focus().undo().run()} icon={Undo} />
 				<MenuButton onClick={() => editor.chain().focus().redo().run()} icon={Redo} />
 			</div>
@@ -54,7 +54,7 @@ interface MenuButtonProps {
 
 function MenuButton({ onClick, active, icon: Icon }: MenuButtonProps) {
 	return (
-		<button type="button" onClick={onClick} className={`p-2 rounded hover:bg-zinc-800 transition-colors ${active ? "text-terminal-green bg-zinc-800" : "text-zinc-500"}`}>
+		<button type="button" onClick={onClick} className={`p-2 rounded-sm hover:bg-muted transition-colors ${active ? "text-primary bg-muted" : "text-muted-foreground"}`}>
 			<Icon size={16} />
 		</button>
 	);
