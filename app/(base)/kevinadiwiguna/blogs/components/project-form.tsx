@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Editor } from "@/components/tiptap";
 import { uploadImage } from "@/lib/db/s3";
-import { Save, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Save, Loader2, Image as ImageIcon, X, Plus } from "lucide-react";
 import Image from "next/image";
 
 export type BlogPost = {
@@ -27,8 +27,8 @@ type PostFormData = Omit<BlogPost, "id" | "views" | "createdAt" | "updatedAt"> &
 	id?: string;
 	tagIds?: string[];
 	categoryIds?: string[];
-	tagNames?: string;
-	categoryNames?: string;
+	tagNames?: string[];
+	categoryNames?: string[];
 };
 
 interface PostFormProps {
@@ -61,6 +61,8 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 	const queryClient = useQueryClient();
 	const [uploading, setUploading] = useState(false);
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [tagInput, setTagInput] = useState("");
+	const [categoryInput, setCategoryInput] = useState("");
 
 	const [formData, setFormData] = useState<PostFormData>({
 		id: initialData?.id,
@@ -71,8 +73,8 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 		image: initialData?.image ?? null,
 		published: initialData?.published ?? false,
 		readTime: initialData?.readTime ?? null,
-		tagNames: initialData?.tags?.map((t) => t.name).join(", ") || "",
-		categoryNames: initialData?.categories?.map((c) => c.name).join(", ") || "",
+		tagNames: initialData?.tags?.map((t) => t.name) || [],
+		categoryNames: initialData?.categories?.map((c) => c.name) || [],
 	});
 
 	const { mutate: saveBlog, isPending } = useMutation({
@@ -98,18 +100,40 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 		}
 	};
 
-	const parseTagNames = (input: string): string[] => {
-		return input
-			.split(",")
-			.map((tag) => tag.trim())
-			.filter((tag) => tag.length > 0);
+	const addTag = (tag: string) => {
+		const trimmed = tag.trim();
+		if (trimmed && !formData.tagNames?.includes(trimmed)) {
+			setFormData((prev) => ({
+				...prev,
+				tagNames: [...(prev.tagNames || []), trimmed],
+			}));
+		}
+		setTagInput("");
 	};
 
-	const parseCategoryNames = (input: string): string[] => {
-		return input
-			.split(",")
-			.map((cat) => cat.trim())
-			.filter((cat) => cat.length > 0);
+	const removeTag = (tag: string) => {
+		setFormData((prev) => ({
+			...prev,
+			tagNames: prev.tagNames?.filter((t) => t !== tag) || [],
+		}));
+	};
+
+	const addCategory = (category: string) => {
+		const trimmed = category.trim();
+		if (trimmed && !formData.categoryNames?.includes(trimmed)) {
+			setFormData((prev) => ({
+				...prev,
+				categoryNames: [...(prev.categoryNames || []), trimmed],
+			}));
+		}
+		setCategoryInput("");
+	};
+
+	const removeCategory = (category: string) => {
+		setFormData((prev) => ({
+			...prev,
+			categoryNames: prev.categoryNames?.filter((c) => c !== category) || [],
+		}));
 	};
 
 	const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,13 +183,8 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 		e.preventDefault();
 		if (!validate()) return;
 
-		const tagNameList = parseTagNames(formData.tagNames || "");
-		const categoryNameList = parseCategoryNames(formData.categoryNames || "");
-
 		saveBlog({
 			...formData,
-			tagNames: tagNameList.join(", "),
-			categoryNames: categoryNameList.join(", "),
 		});
 	};
 
@@ -230,23 +249,17 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Categories</label>
 					<div className="flex flex-wrap gap-2">
 						{categories.map((category) => {
-							const isSelected = formData.categoryNames
-								?.split(",")
-								.map((c) => c.trim())
-								.includes(category.name);
+							const isSelected = formData.categoryNames?.includes(category.name);
 							return (
 								<button
 									key={category.id}
 									type="button"
 									onClick={() => {
-										const currentNames = parseTagNames(formData.categoryNames || "");
-										const updated = isSelected
-											? currentNames.filter((n) => n !== category.name)
-											: [...currentNames, category.name];
-										setFormData((prev) => ({
-											...prev,
-											categoryNames: updated.join(", "),
-										}));
+										if (isSelected) {
+											removeCategory(category.name);
+										} else {
+											addCategory(category.name);
+										}
 									}}
 									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
 										isSelected
@@ -267,23 +280,17 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Tags</label>
 					<div className="flex flex-wrap gap-2">
 						{tags.map((tag) => {
-							const isSelected = formData.tagNames
-								?.split(",")
-								.map((t) => t.trim())
-								.includes(tag.name);
+							const isSelected = formData.tagNames?.includes(tag.name);
 							return (
 								<button
 									key={tag.id}
 									type="button"
 									onClick={() => {
-										const currentNames = parseTagNames(formData.tagNames || "");
-										const updated = isSelected
-											? currentNames.filter((n) => n !== tag.name)
-											: [...currentNames, tag.name];
-										setFormData((prev) => ({
-											...prev,
-											tagNames: updated.join(", "),
-										}));
+										if (isSelected) {
+											removeTag(tag.name);
+										} else {
+											addTag(tag.name);
+										}
 									}}
 									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
 										isSelected
@@ -299,46 +306,70 @@ export function PostForm({ initialData, onSuccess, tags = [], categories = [] }:
 				</div>
 			)}
 
-			<div className="space-y-2">
-				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Or Add New Categories (comma separated)</label>
-				<input
-					type="text"
-					placeholder="e.g. Web Development, Backend, DevOps"
-					className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-					onBlur={(e) => {
-						const newCategories = parseCategoryNames(e.target.value);
-						if (newCategories.length > 0) {
-							const current = parseCategoryNames(formData.categoryNames || "");
-							const combined = Array.from(new Set([...current, ...newCategories]));
-							setFormData((prev) => ({
-								...prev,
-								categoryNames: combined.join(", "),
-							}));
-							e.target.value = "";
-						}
-					}}
-				/>
+			<div className="space-y-3">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Add New Categories</label>
+
+				<div className="flex gap-2">
+					<input
+						value={categoryInput}
+						onChange={(e) => setCategoryInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								addCategory(categoryInput);
+							}
+						}}
+						placeholder="e.g. Web Development, Backend, DevOps..."
+						className="flex-1 bg-background border border-input rounded-sm p-2 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+					/>
+					<button type="button" onClick={() => addCategory(categoryInput)} className="px-3 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-sm transition-colors">
+						<Plus size={16} />
+					</button>
+				</div>
+
+				<div className="flex flex-wrap gap-2 pt-1">
+					{formData.categoryNames?.map((category) => (
+						<span key={category} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
+							{category}
+							<button type="button" onClick={() => removeCategory(category)} className="hover:opacity-70 transition-opacity">
+								<X size={12} />
+							</button>
+						</span>
+					))}
+				</div>
 			</div>
 
-			<div className="space-y-2">
-				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Or Add New Tags (comma separated)</label>
-				<input
-					type="text"
-					placeholder="e.g. javascript, react, nextjs"
-					className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-					onBlur={(e) => {
-						const newTags = parseTagNames(e.target.value);
-						if (newTags.length > 0) {
-							const current = parseTagNames(formData.tagNames || "");
-							const combined = Array.from(new Set([...current, ...newTags]));
-							setFormData((prev) => ({
-								...prev,
-								tagNames: combined.join(", "),
-							}));
-							e.target.value = "";
-						}
-					}}
-				/>
+			<div className="space-y-3">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Add New Tags</label>
+
+				<div className="flex gap-2">
+					<input
+						value={tagInput}
+						onChange={(e) => setTagInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								addTag(tagInput);
+							}
+						}}
+						placeholder="e.g. javascript, react, nextjs..."
+						className="flex-1 bg-background border border-input rounded-sm p-2 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+					/>
+					<button type="button" onClick={() => addTag(tagInput)} className="px-3 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-sm transition-colors">
+						<Plus size={16} />
+					</button>
+				</div>
+
+				<div className="flex flex-wrap gap-2 pt-1">
+					{formData.tagNames?.map((tag) => (
+						<span key={tag} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
+							{tag}
+							<button type="button" onClick={() => removeTag(tag)} className="hover:opacity-70 transition-opacity">
+								<X size={12} />
+							</button>
+						</span>
+					))}
+				</div>
 			</div>
 
 			<div className="flex items-center justify-between pt-4 border-t border-border">
