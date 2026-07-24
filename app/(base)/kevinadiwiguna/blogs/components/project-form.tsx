@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Editor } from "@/components/tiptap"; // sesuaikan path editor Anda
-import { uploadImage } from "@/lib/db/s3"; // sesuaikan path upload service Anda
+import { Editor } from "@/components/tiptap";
+import { uploadImage } from "@/lib/db/s3";
 import { Save, Loader2, Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 
@@ -19,15 +19,23 @@ export type BlogPost = {
 	views: number;
 	createdAt: Date;
 	updatedAt: Date;
+	tags?: Array<{ id: string; name: string }>;
+	categories?: Array<{ id: string; name: string }>;
 };
 
 type PostFormData = Omit<BlogPost, "id" | "views" | "createdAt" | "updatedAt"> & {
 	id?: string;
+	tagIds?: string[];
+	categoryIds?: string[];
+	tagNames?: string;
+	categoryNames?: string;
 };
 
 interface PostFormProps {
 	initialData?: Partial<BlogPost>;
 	onSuccess: () => void;
+	tags?: Array<{ id: string; name: string }>;
+	categories?: Array<{ id: string; name: string }>;
 }
 
 const saveBlogApi = async (data: PostFormData) => {
@@ -49,7 +57,7 @@ const saveBlogApi = async (data: PostFormData) => {
 	return response.json();
 };
 
-export function PostForm({ initialData, onSuccess }: PostFormProps) {
+export function PostForm({ initialData, onSuccess, tags = [], categories = [] }: PostFormProps) {
 	const queryClient = useQueryClient();
 	const [uploading, setUploading] = useState(false);
 	const [errors, setErrors] = useState<Record<string, string>>({});
@@ -63,6 +71,8 @@ export function PostForm({ initialData, onSuccess }: PostFormProps) {
 		image: initialData?.image ?? null,
 		published: initialData?.published ?? false,
 		readTime: initialData?.readTime ?? null,
+		tagNames: initialData?.tags?.map((t) => t.name).join(", ") || "",
+		categoryNames: initialData?.categories?.map((c) => c.name).join(", ") || "",
 	});
 
 	const { mutate: saveBlog, isPending } = useMutation({
@@ -86,6 +96,20 @@ export function PostForm({ initialData, onSuccess }: PostFormProps) {
 		if (errors[name]) {
 			setErrors((prev) => ({ ...prev, [name]: "" }));
 		}
+	};
+
+	const parseTagNames = (input: string): string[] => {
+		return input
+			.split(",")
+			.map((tag) => tag.trim())
+			.filter((tag) => tag.length > 0);
+	};
+
+	const parseCategoryNames = (input: string): string[] => {
+		return input
+			.split(",")
+			.map((cat) => cat.trim())
+			.filter((cat) => cat.length > 0);
 	};
 
 	const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +159,14 @@ export function PostForm({ initialData, onSuccess }: PostFormProps) {
 		e.preventDefault();
 		if (!validate()) return;
 
-		saveBlog(formData);
+		const tagNameList = parseTagNames(formData.tagNames || "");
+		const categoryNameList = parseCategoryNames(formData.categoryNames || "");
+
+		saveBlog({
+			...formData,
+			tagNames: tagNameList.join(", "),
+			categoryNames: categoryNameList.join(", "),
+		});
 	};
 
 	return (
@@ -192,6 +223,122 @@ export function PostForm({ initialData, onSuccess }: PostFormProps) {
 					}}
 				/>
 				{errors.content && <p className="text-destructive text-[10px] font-mono">{errors.content}</p>}
+			</div>
+
+			{categories.length > 0 && (
+				<div className="space-y-3">
+					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Categories</label>
+					<div className="flex flex-wrap gap-2">
+						{categories.map((category) => {
+							const isSelected = formData.categoryNames
+								?.split(",")
+								.map((c) => c.trim())
+								.includes(category.name);
+							return (
+								<button
+									key={category.id}
+									type="button"
+									onClick={() => {
+										const currentNames = parseTagNames(formData.categoryNames || "");
+										const updated = isSelected
+											? currentNames.filter((n) => n !== category.name)
+											: [...currentNames, category.name];
+										setFormData((prev) => ({
+											...prev,
+											categoryNames: updated.join(", "),
+										}));
+									}}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
+										isSelected
+											? "bg-primary text-primary-foreground"
+											: "bg-muted text-muted-foreground hover:bg-muted/80"
+									}`}
+								>
+									{category.name}
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			{tags.length > 0 && (
+				<div className="space-y-3">
+					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Tags</label>
+					<div className="flex flex-wrap gap-2">
+						{tags.map((tag) => {
+							const isSelected = formData.tagNames
+								?.split(",")
+								.map((t) => t.trim())
+								.includes(tag.name);
+							return (
+								<button
+									key={tag.id}
+									type="button"
+									onClick={() => {
+										const currentNames = parseTagNames(formData.tagNames || "");
+										const updated = isSelected
+											? currentNames.filter((n) => n !== tag.name)
+											: [...currentNames, tag.name];
+										setFormData((prev) => ({
+											...prev,
+											tagNames: updated.join(", "),
+										}));
+									}}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${
+										isSelected
+											? "bg-primary text-primary-foreground"
+											: "bg-muted text-muted-foreground hover:bg-muted/80"
+									}`}
+								>
+									{tag.name}
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			<div className="space-y-2">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Or Add New Categories (comma separated)</label>
+				<input
+					type="text"
+					placeholder="e.g. Web Development, Backend, DevOps"
+					className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+					onBlur={(e) => {
+						const newCategories = parseCategoryNames(e.target.value);
+						if (newCategories.length > 0) {
+							const current = parseCategoryNames(formData.categoryNames || "");
+							const combined = Array.from(new Set([...current, ...newCategories]));
+							setFormData((prev) => ({
+								...prev,
+								categoryNames: combined.join(", "),
+							}));
+							e.target.value = "";
+						}
+					}}
+				/>
+			</div>
+
+			<div className="space-y-2">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Or Add New Tags (comma separated)</label>
+				<input
+					type="text"
+					placeholder="e.g. javascript, react, nextjs"
+					className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+					onBlur={(e) => {
+						const newTags = parseTagNames(e.target.value);
+						if (newTags.length > 0) {
+							const current = parseTagNames(formData.tagNames || "");
+							const combined = Array.from(new Set([...current, ...newTags]));
+							setFormData((prev) => ({
+								...prev,
+								tagNames: combined.join(", "),
+							}));
+							e.target.value = "";
+						}
+					}}
+				/>
 			</div>
 
 			<div className="flex items-center justify-between pt-4 border-t border-border">

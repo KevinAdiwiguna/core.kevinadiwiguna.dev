@@ -44,7 +44,47 @@ export const getAllBlogs = async () => {
     }
 
     const blog = await kevinadiwigunaDB.blogs.findMany({
+        include: {
+            tags: true,
+            categories: true,
+        }
     });
 
     return blog;
+}
+
+export const getAllTags = async () => {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const tags = await kevinadiwigunaDB.tag.findMany({
+        orderBy: {
+            name: "asc"
+        }
+    });
+
+    return tags;
+}
+
+export const getAllCategories = async () => {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
+    const categories = await kevinadiwigunaDB.category.findMany({
+        orderBy: {
+            name: "asc"
+        }
+    });
+
+    return categories;
 }

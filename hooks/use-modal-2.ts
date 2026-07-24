@@ -13,6 +13,8 @@ export type totalBlogsProps = {
     views: number;
     createdAt: Date;
     updatedAt: Date;
+    tags?: Array<{ id: string; name: string }>;
+    categories?: Array<{ id: string; name: string }>;
 };
 
 

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
 	try {
 		const body = await req.json();
-		const { title, slug, content, excerpt, image, published, readTime } = body;
+		const { title, slug, content, excerpt, image, published, readTime, tagNames = "", categoryNames = "" } = body;
 
 		if (!title || !slug || !content) {
 			return NextResponse.json(
@@ -80,6 +80,16 @@ export async function POST(req: Request) {
 
 		const calculatedReadTime = readTime ?? calculateReadTime(content);
 
+		const parseNames = (input: string): string[] => {
+			return input
+				.split(",")
+				.map((name) => name.trim())
+				.filter((name) => name.length > 0);
+		};
+
+		const tagNameList = parseNames(tagNames);
+		const categoryNameList = parseNames(categoryNames);
+
 		const blog = await kevinadiwigunaDB.blogs.create({
 			data: {
 				title,
@@ -89,6 +99,22 @@ export async function POST(req: Request) {
 				image: image || null,
 				published: Boolean(published),
 				readTime: calculatedReadTime,
+				tags: {
+					connectOrCreate: tagNameList.map((name) => ({
+						where: { name },
+						create: { name },
+					})),
+				},
+				categories: {
+					connectOrCreate: categoryNameList.map((name) => ({
+						where: { name },
+						create: { name },
+					})),
+				},
+			},
+			include: {
+				tags: true,
+				categories: true,
 			},
 		});
 

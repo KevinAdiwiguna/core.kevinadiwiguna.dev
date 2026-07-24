@@ -26,7 +26,7 @@ export async function PUT(
 	try {
 		const { id } = await params;
 		const body = await req.json();
-		const { title, slug, content, excerpt, image, published, readTime } = body;
+		const { title, slug, content, excerpt, image, published, readTime, tagNames = "", categoryNames = "" } = body;
 
 		const existingBlog = await kevinadiwigunaDB.blogs.findUnique({
 			where: { id },
@@ -39,7 +39,6 @@ export async function PUT(
 			);
 		}
 
-		// Validasi jika slug diubah dan sudah dipakai oleh blog lain
 		if (slug && slug !== existingBlog.slug) {
 			const slugCheck = await kevinadiwigunaDB.blogs.findUnique({
 				where: { slug },
@@ -53,7 +52,6 @@ export async function PUT(
 			}
 		}
 
-		// Hitung ulang readTime jika content berubah dan readTime tidak dikirim eksplisit
 		const updatedContent = content ?? existingBlog.content;
 		const calculatedReadTime =
 			readTime !== undefined
@@ -61,6 +59,16 @@ export async function PUT(
 				: content
 					? calculateReadTime(content)
 					: existingBlog.readTime;
+
+		const parseNames = (input: string): string[] => {
+			return input
+				.split(",")
+				.map((name) => name.trim())
+				.filter((name) => name.length > 0);
+		};
+
+		const tagNameList = parseNames(tagNames);
+		const categoryNameList = parseNames(categoryNames);
 
 		const updatedBlog = await kevinadiwigunaDB.blogs.update({
 			where: { id },
@@ -72,6 +80,24 @@ export async function PUT(
 				image: image !== undefined ? image : existingBlog.image,
 				published: published !== undefined ? Boolean(published) : existingBlog.published,
 				readTime: calculatedReadTime,
+				tags: {
+					set: [],
+					connectOrCreate: tagNameList.map((name) => ({
+						where: { name },
+						create: { name },
+					})),
+				},
+				categories: {
+					set: [],
+					connectOrCreate: categoryNameList.map((name) => ({
+						where: { name },
+						create: { name },
+					})),
+				},
+			},
+			include: {
+				tags: true,
+				categories: true,
 			},
 		});
 

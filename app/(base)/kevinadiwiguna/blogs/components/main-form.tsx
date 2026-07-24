@@ -1,7 +1,7 @@
 "use client";
 
 import { CreateButton } from "./create-button";
-import { EditButton } from "./edit-button";
+import { EditButton, totalBlogsProps } from "./edit-button";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 
 import { PostForm } from "./project-form";
@@ -10,21 +10,7 @@ import { useRouter } from "next/navigation";
 
 import { useModal2 } from "@/hooks/use-modal-2";
 
-export type totalBlogsProps = {
-	id: string;
-	title: string;
-	slug: string;
-	content: string;
-	image: string | null;
-	excerpt: string | null;
-	published: boolean;
-	readTime: number | null;
-	views: number;
-	createdAt: Date;
-	updatedAt: Date;
-};
-
-export const MainForm = ({ totalBlogs, getAllBlogs }: { totalBlogs: number; getAllBlogs: totalBlogsProps[] }) => {
+export const MainForm = ({ totalBlogs, getAllBlogs, tags = [], categories = [] }: { totalBlogs: number; getAllBlogs: totalBlogsProps[]; tags?: Array<{ id: string; name: string }>; categories?: Array<{ id: string; name: string }> }) => {
 	const router = useRouter();
 	const { isOpen, selectedBlogs, setIsOpen, setSelectedBlogs } = useModal2();
 
@@ -95,9 +81,13 @@ export const MainForm = ({ totalBlogs, getAllBlogs }: { totalBlogs: number; getA
 									published: selectedBlogs.published,
 									readTime: selectedBlogs.readTime,
 									views: selectedBlogs.views,
+									tags: selectedBlogs.tags,
+									categories: selectedBlogs.categories,
 								}
 							: undefined
 					}
+					tags={tags}
+					categories={categories}
 					onSuccess={() => {
 						handleClose();
 						router.refresh();
