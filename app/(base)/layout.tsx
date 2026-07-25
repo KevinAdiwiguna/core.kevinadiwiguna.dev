@@ -11,6 +11,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
 const jetbrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
 	variable: "--font-mono",
@@ -22,6 +26,12 @@ export default async function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+	if (!session || !session.user) {
+		return redirect("/login");
+	}
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${jetbrainsMono.variable} min-h-full flex flex-col antialiased`}>
