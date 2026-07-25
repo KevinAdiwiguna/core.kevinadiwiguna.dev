@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 import { ChevronsUpDownIcon, LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function NavUser({ user }: { user: { id: string; createdAt: Date; updatedAt: Date; email: string; emailVerified: boolean; name: string; image?: string | null | undefined; role: string } }) {
+export function NavUser({ user }: { user: { id: string; createdAt: Date; updatedAt: Date; email: string; emailVerified: boolean; name: string; image?: string | null | undefined } }) {
 	const { isMobile } = useSidebar();
 	const router = useRouter();
 	return (
