@@ -8,16 +8,16 @@ export function proxy(request: NextRequest) {
         request.cookies.get("better-auth.session_token")?.value ||
         request.cookies.get("__Secure-better-auth.session_token")?.value;
 
-    const isLoginPage = pathname === "/login";
+    const isPublicPage = pathname === "/login" || pathname === "/not-whitelisted";
 
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
 
-    if (session && (pathname === "/" || isLoginPage)) {
+    if (session && (pathname === "/" || isPublicPage)) {
         return NextResponse.redirect(new URL("/kevinadiwiguna", request.url));
     }
 
-    if (!session && !isLoginPage) {
+    if (!session && !isPublicPage) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
