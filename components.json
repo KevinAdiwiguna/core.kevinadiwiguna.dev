@@ -1,12 +1,12 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-maia",
+  "style": "base-lyra",
   "rsc": true,
   "tsx": true,
   "tailwind": {
     "config": "",
     "css": "styles/globals.css",
-    "baseColor": "mist",
+    "baseColor": "stone",
     "cssVariables": true,
     "prefix": ""
   },

@@ -2,6 +2,7 @@ import { JetBrains_Mono } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "@/styles/globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const jetbrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
@@ -19,7 +20,7 @@ export default async function RootLayout({
 			<body className={`${jetbrainsMono.variable} min-h-full flex flex-col antialiased`}>
 				<QueryProvider>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-						{children}
+						<TooltipProvider>{children}</TooltipProvider>
 					</ThemeProvider>
 				</QueryProvider>
 			</body>
