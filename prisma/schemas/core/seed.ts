@@ -4,7 +4,6 @@ import { hashPassword } from "better-auth/crypto";
 async function main() {
     console.log("🌱 Seeding Core Database...");
 
-    await coreDB.projectMember.deleteMany();
     await coreDB.project.deleteMany();
     await coreDB.account.deleteMany();
     await coreDB.session.deleteMany();
@@ -40,12 +39,6 @@ async function main() {
             description: "Personal Portfolio & Blog Management",
             icon: "Code2Icon",
             status: "ACTIVE",
-            members: {
-                create: {
-                    userId: user.id,
-                    role: "OWNER",
-                },
-            },
         },
     });
 
