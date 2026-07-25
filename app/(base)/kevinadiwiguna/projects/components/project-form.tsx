@@ -4,27 +4,47 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Editor } from "@/components/tiptap";
 import { uploadImage } from "@/lib/db/s3";
-import { Save, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Save, Loader2, Image as ImageIcon, X, Plus } from "lucide-react";
 import Image from "next/image";
 
 type ProjectStatus = "ONGOING" | "COMPLETED";
 
-type ProjectFormData = {
-	id?: string;
+export type Project = {
+	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	image: string | null;
 	title: string;
 	slug: string;
 	shortDescription: string;
 	content: string;
-	image: string;
-	githubUrl: string;
-	liveUrl: string;
+	githubUrl: string | null;
+	liveUrl: string | null;
 	isFeatured: boolean;
 	status: ProjectStatus;
+	technologies: {
+		id: string;
+		name: string;
+	}[];
+	categories: {
+		id: string;
+		name: string;
+	}[];
+};
+
+type ProjectFormData = Omit<Project, "id" | "createdAt" | "updatedAt" | "technologies" | "categories"> & {
+	id?: string;
+	techIds?: string[];
+	categoryIds?: string[];
+	techNames?: string | string[];
+	categoryNames?: string | string[];
 };
 
 interface ProjectFormProps {
-	initialData?: Partial<ProjectFormData>;
+	initialData?: Partial<Project>;
 	onSuccess: () => void;
+	technologies?: Array<{ id: string; name: string }>;
+	categories?: Array<{ id: string; name: string }>;
 }
 
 const saveProjectApi = async (data: ProjectFormData) => {
@@ -46,10 +66,12 @@ const saveProjectApi = async (data: ProjectFormData) => {
 	return response.json();
 };
 
-export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
+export function ProjectForm({ initialData, onSuccess, technologies = [], categories = [] }: ProjectFormProps) {
 	const queryClient = useQueryClient();
 	const [uploading, setUploading] = useState(false);
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [techInput, setTechInput] = useState("");
+	const [categoryInput, setCategoryInput] = useState("");
 
 	const [formData, setFormData] = useState<ProjectFormData>({
 		id: initialData?.id,
@@ -57,11 +79,13 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 		slug: initialData?.slug || "",
 		shortDescription: initialData?.shortDescription || "",
 		content: initialData?.content || "",
-		image: initialData?.image || "",
-		githubUrl: initialData?.githubUrl || "",
-		liveUrl: initialData?.liveUrl || "",
+		image: initialData?.image ?? null,
+		githubUrl: initialData?.githubUrl ?? null,
+		liveUrl: initialData?.liveUrl ?? null,
 		isFeatured: initialData?.isFeatured ?? false,
 		status: initialData?.status || "COMPLETED",
+		techNames: initialData?.technologies?.map((t) => t.name) ?? [],
+		categoryNames: initialData?.categories?.map((c) => c.name) ?? [],
 	});
 
 	const { mutate: saveProject, isPending } = useMutation({
@@ -87,6 +111,46 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 		}
 	};
 
+	const addTech = (tech: string) => {
+		const trimmed = tech.trim();
+		const techs = Array.isArray(formData.techNames) ? formData.techNames : [];
+		if (trimmed && !techs.includes(trimmed)) {
+			setFormData((prev) => ({
+				...prev,
+				techNames: [...techs, trimmed],
+			}));
+		}
+		setTechInput("");
+	};
+
+	const removeTech = (tech: string) => {
+		const techs = Array.isArray(formData.techNames) ? formData.techNames : [];
+		setFormData((prev) => ({
+			...prev,
+			techNames: techs.filter((t) => t !== tech),
+		}));
+	};
+
+	const addCategory = (category: string) => {
+		const trimmed = category.trim();
+		const cats = Array.isArray(formData.categoryNames) ? formData.categoryNames : [];
+		if (trimmed && !cats.includes(trimmed)) {
+			setFormData((prev) => ({
+				...prev,
+				categoryNames: [...cats, trimmed],
+			}));
+		}
+		setCategoryInput("");
+	};
+
+	const removeCategory = (category: string) => {
+		const cats = Array.isArray(formData.categoryNames) ? formData.categoryNames : [];
+		setFormData((prev) => ({
+			...prev,
+			categoryNames: cats.filter((c) => c !== category),
+		}));
+	};
+
 	const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const title = e.target.value;
 		setFormData((prev) => ({
@@ -99,6 +163,8 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 						.replace(/[^a-z0-9]+/g, "-")
 						.replace(/(^-|-$)+/g, ""),
 		}));
+
+		if (errors.title) setErrors((prev) => ({ ...prev, title: "" }));
 	};
 
 	const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +199,14 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 		e.preventDefault();
 		if (!validate()) return;
 
-		saveProject(formData);
+		const techNames = Array.isArray(formData.techNames) ? formData.techNames.join(", ") : "";
+		const categoryNames = Array.isArray(formData.categoryNames) ? formData.categoryNames.join(", ") : "";
+
+		saveProject({
+			...formData,
+			techNames,
+			categoryNames,
+		});
 	};
 
 	return (
@@ -159,7 +232,7 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 						{formData.image ? (
 							<>
 								<Image src={formData.image} alt="Preview" fill className="object-cover" />
-								<button type="button" onClick={() => setFormData((prev) => ({ ...prev, image: "" }))} className="absolute top-2 right-2 p-1 bg-background/80 hover:bg-background text-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+								<button type="button" onClick={() => setFormData((prev) => ({ ...prev, image: null }))} className="absolute top-2 right-2 p-1 bg-background/80 hover:bg-background text-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm">
 									<X size={14} />
 								</button>
 							</>
@@ -196,11 +269,137 @@ export function ProjectForm({ initialData, onSuccess }: ProjectFormProps) {
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<div className="space-y-2">
 					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Github_Endpoint</label>
-					<input name="githubUrl" value={formData.githubUrl} onChange={handleChange} className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors" />
+					<input name="githubUrl" value={formData.githubUrl || ""} onChange={handleChange} className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors" />
 				</div>
 				<div className="space-y-2">
 					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Live_Deployment</label>
-					<input name="liveUrl" value={formData.liveUrl} onChange={handleChange} className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors" />
+					<input name="liveUrl" value={formData.liveUrl || ""} onChange={handleChange} className="w-full bg-background border border-input rounded-sm p-3 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors" />
+				</div>
+			</div>
+
+			{/* Existing Categories Selection */}
+			{categories.length > 0 && (
+				<div className="space-y-3">
+					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Categories</label>
+					<div className="flex flex-wrap gap-2">
+						{categories.map((category) => {
+							const isSelected = formData.categoryNames?.includes(category.name);
+							return (
+								<button
+									key={category.id}
+									type="button"
+									onClick={() => {
+										if (isSelected) {
+											removeCategory(category.name);
+										} else {
+											addCategory(category.name);
+										}
+									}}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+								>
+									{category.name}
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			{/* Existing Technologies Selection */}
+			{technologies.length > 0 && (
+				<div className="space-y-3">
+					<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Select Technologies</label>
+					<div className="flex flex-wrap gap-2">
+						{technologies.map((tech) => {
+							const isSelected = formData.techNames?.includes(tech.name);
+							return (
+								<button
+									key={tech.id}
+									type="button"
+									onClick={() => {
+										if (isSelected) {
+											removeTech(tech.name);
+										} else {
+											addTech(tech.name);
+										}
+									}}
+									className={`px-3 py-2 rounded-sm font-mono text-[10px] transition-colors ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+								>
+									{tech.name}
+								</button>
+							);
+						})}
+					</div>
+				</div>
+			)}
+
+			{/* Add New Categories Input */}
+			<div className="space-y-3">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Add New Categories</label>
+
+				<div className="flex gap-2">
+					<input
+						value={categoryInput}
+						onChange={(e) => setCategoryInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								addCategory(categoryInput);
+							}
+						}}
+						placeholder="e.g. Web App, Mobile, Open Source..."
+						className="flex-1 bg-background border border-input rounded-sm p-2 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+					/>
+					<button type="button" onClick={() => addCategory(categoryInput)} className="px-3 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-sm transition-colors">
+						<Plus size={16} />
+					</button>
+				</div>
+
+				<div className="flex flex-wrap gap-2 pt-1">
+					{Array.isArray(formData.categoryNames) &&
+						formData.categoryNames.map((category) => (
+							<span key={category} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
+								{category}
+								<button type="button" onClick={() => removeCategory(category)} className="hover:opacity-70 transition-opacity">
+									<X size={12} />
+								</button>
+							</span>
+						))}
+				</div>
+			</div>
+
+			{/* Add New Technologies Input */}
+			<div className="space-y-3">
+				<label className="block font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Add New Technologies</label>
+
+				<div className="flex gap-2">
+					<input
+						value={techInput}
+						onChange={(e) => setTechInput(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter") {
+								e.preventDefault();
+								addTech(techInput);
+							}
+						}}
+						placeholder="e.g. Next.js, Prisma, Tailwind CSS..."
+						className="flex-1 bg-background border border-input rounded-sm p-2 font-mono text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+					/>
+					<button type="button" onClick={() => addTech(techInput)} className="px-3 bg-muted hover:bg-muted/80 text-foreground border border-input rounded-sm transition-colors">
+						<Plus size={16} />
+					</button>
+				</div>
+
+				<div className="flex flex-wrap gap-2 pt-1">
+					{Array.isArray(formData.techNames) &&
+						formData.techNames.map((tech) => (
+							<span key={tech} className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-sm font-mono text-[11px]">
+								{tech}
+								<button type="button" onClick={() => removeTech(tech)} className="hover:opacity-70 transition-opacity">
+									<X size={12} />
+								</button>
+							</span>
+						))}
 				</div>
 			</div>
 

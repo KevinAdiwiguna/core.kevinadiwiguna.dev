@@ -19,7 +19,19 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await req.json();
-        const { title, slug, shortDescription, content, image, githubUrl, liveUrl, isFeatured, status } = body;
+        const {
+            title,
+            slug,
+            shortDescription,
+            content,
+            image,
+            githubUrl,
+            liveUrl,
+            isFeatured,
+            status,
+            techNames,
+            categoryNames,
+        } = body;
 
         const existingProject = await kevinadiwigunaDB.project.findUnique({
             where: { id },
@@ -45,6 +57,14 @@ export async function PUT(
             }
         }
 
+        const parsedTechs = typeof techNames === "string"
+            ? techNames.split(",").map((t) => t.trim()).filter(Boolean)
+            : [];
+
+        const parsedCategories = typeof categoryNames === "string"
+            ? categoryNames.split(",").map((c) => c.trim()).filter(Boolean)
+            : [];
+
         const updatedProject = await kevinadiwigunaDB.project.update({
             where: { id },
             data: {
@@ -57,6 +77,26 @@ export async function PUT(
                 liveUrl: liveUrl !== undefined ? liveUrl : existingProject.liveUrl,
                 isFeatured: isFeatured !== undefined ? Boolean(isFeatured) : existingProject.isFeatured,
                 status: status ?? existingProject.status,
+
+                technologies: {
+                    set: [],
+                    connectOrCreate: parsedTechs.map((name) => ({
+                        where: { name },
+                        create: { name },
+                    })),
+                },
+
+                categories: {
+                    set: [],
+                    connectOrCreate: parsedCategories.map((name) => ({
+                        where: { name },
+                        create: { name },
+                    })),
+                },
+            },
+            include: {
+                technologies: true,
+                categories: true,
             },
         });
 

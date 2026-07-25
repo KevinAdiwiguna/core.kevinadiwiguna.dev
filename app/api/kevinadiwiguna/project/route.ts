@@ -26,7 +26,7 @@ export async function GET() {
                 categories: true,
             },
         });
-        revalidatePath("/kevinadiwiguna/projects");
+
         return NextResponse.json(projects, { status: 200 });
     } catch (error) {
         console.error("[PROJECT_GET_ERROR]", error);
@@ -51,7 +51,19 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { title, slug, shortDescription, content, image, githubUrl, liveUrl, isFeatured, status } = body;
+        const {
+            title,
+            slug,
+            shortDescription,
+            content,
+            image,
+            githubUrl,
+            liveUrl,
+            isFeatured,
+            status,
+            techNames,
+            categoryNames,
+        } = body;
 
         if (!title || !slug || !shortDescription || !content) {
             return NextResponse.json(
@@ -71,6 +83,14 @@ export async function POST(req: Request) {
             );
         }
 
+        const parsedTechs = typeof techNames === "string"
+            ? techNames.split(",").map((t) => t.trim()).filter(Boolean)
+            : [];
+
+        const parsedCategories = typeof categoryNames === "string"
+            ? categoryNames.split(",").map((c) => c.trim()).filter(Boolean)
+            : [];
+
         const project = await kevinadiwigunaDB.project.create({
             data: {
                 title,
@@ -82,6 +102,28 @@ export async function POST(req: Request) {
                 liveUrl: liveUrl || null,
                 isFeatured: Boolean(isFeatured),
                 status: status || "COMPLETED",
+
+                ...(parsedTechs.length > 0 && {
+                    technologies: {
+                        connectOrCreate: parsedTechs.map((name) => ({
+                            where: { name },
+                            create: { name },
+                        })),
+                    },
+                }),
+
+                ...(parsedCategories.length > 0 && {
+                    categories: {
+                        connectOrCreate: parsedCategories.map((name) => ({
+                            where: { name },
+                            create: { name },
+                        })),
+                    },
+                }),
+            },
+            include: {
+                technologies: true,
+                categories: true,
             },
         });
 

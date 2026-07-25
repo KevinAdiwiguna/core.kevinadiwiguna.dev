@@ -12,9 +12,11 @@ import { ProjectForm } from "./project-form";
 import { Modal } from "@/components/modal";
 import { useRouter } from "next/navigation";
 export type totalProjectsType = {
-	title: string;
-	image: string | null;
 	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	image: string | null;
+	title: string;
 	slug: string;
 	shortDescription: string;
 	content: string;
@@ -22,11 +24,17 @@ export type totalProjectsType = {
 	liveUrl: string | null;
 	isFeatured: boolean;
 	status: ProjectStatus;
-	createdAt: Date;
-	updatedAt: Date;
+	technologies: {
+		id: string;
+		name: string;
+	}[];
+	categories: {
+		id: string;
+		name: string;
+	}[];
 };
 
-export const MainForm = ({ totalProjects, getAllProjects }: { totalProjects: number; getAllProjects: totalProjectsType[] }) => {
+export const MainForm = ({ totalProjects, getAllProjects, categories, technologies }: { totalProjects: number; getAllProjects: totalProjectsType[]; categories?: Array<{ id: string; name: string }>; technologies?: Array<{ id: string; name: string }> }) => {
 	const router = useRouter();
 	const { isOpen, selectedProject, setIsOpen, setSelectedProject } = useModal();
 
@@ -95,14 +103,18 @@ export const MainForm = ({ totalProjects, getAllProjects }: { totalProjects: num
 									slug: selectedProject.slug,
 									shortDescription: selectedProject.shortDescription,
 									content: selectedProject.content,
-									image: selectedProject.image || "",
-									githubUrl: selectedProject.githubUrl || "",
-									liveUrl: selectedProject.liveUrl || "",
+									image: selectedProject.image ?? null,
+									githubUrl: selectedProject.githubUrl ?? null,
+									liveUrl: selectedProject.liveUrl ?? null,
 									isFeatured: selectedProject.isFeatured ?? false,
 									status: selectedProject.status,
+									technologies: selectedProject.technologies ?? [],
+									categories: selectedProject.categories ?? [],
 								}
 							: undefined
 					}
+					technologies={technologies}
+					categories={categories}
 					onSuccess={() => {
 						handleClose();
 						router.refresh();

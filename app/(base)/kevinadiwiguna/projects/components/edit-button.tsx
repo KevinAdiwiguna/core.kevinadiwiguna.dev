@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 
 export type totalProjectsType = {
-	title: string;
-	image: string | null;
 	id: string;
+	createdAt: Date;
+	updatedAt: Date;
+	image: string | null;
+	title: string;
 	slug: string;
 	shortDescription: string;
 	content: string;
@@ -15,8 +17,14 @@ export type totalProjectsType = {
 	liveUrl: string | null;
 	isFeatured: boolean;
 	status: ProjectStatus;
-	createdAt: Date;
-	updatedAt: Date;
+	technologies: {
+		id: string;
+		name: string;
+	}[];
+	categories: {
+		id: string;
+		name: string;
+	}[];
 };
 
 interface EditButtonProps {
