@@ -41,7 +41,7 @@ export default function LoginForm() {
 			return data;
 		},
 		onSuccess: () => {
-			router.push("/");
+			router.push("/kevinadiwiguna");
 			router.refresh();
 		},
 	});
@@ -71,7 +71,7 @@ export default function LoginForm() {
 		try {
 			await authClient.signIn.social({
 				provider,
-				callbackURL: "/",
+				callbackURL: "/kevinadiwiguna",
 			});
 		} catch (error) {
 			console.error("Social login failed", error);
