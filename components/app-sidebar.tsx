@@ -27,13 +27,6 @@ export async function AppSidebar({ ...props }: React.ComponentProps<typeof Sideb
 	}
 
 	const userProjects = await coreDB.project.findMany({
-		where: {
-			members: {
-				some: {
-					userId: session.user.id,
-				},
-			},
-		},
 		select: {
 			id: true,
 			slug: true,
