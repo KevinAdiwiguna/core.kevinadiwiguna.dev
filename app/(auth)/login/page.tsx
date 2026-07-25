@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 	description: "Establish secure session.",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
 	return (
 		<div className="min-h-screen w-full flex bg-background">
 			<div className="hidden lg:flex w-1/2 border-r border-border relative items-center justify-center overflow-hidden">

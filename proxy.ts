@@ -4,7 +4,9 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
-    const session = request.cookies.get("session_token")?.value;
+    const session =
+        request.cookies.get("better-auth.session_token")?.value ||
+        request.cookies.get("__Secure-better-auth.session_token")?.value;
 
     const isLoginPage = pathname === "/login";
 
