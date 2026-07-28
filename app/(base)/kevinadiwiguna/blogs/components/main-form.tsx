@@ -2,6 +2,7 @@
 
 import { CreateButton } from "./create-button";
 import { EditButton, totalBlogsProps } from "./edit-button";
+import { DeleteButton } from "./delete-button";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table } from "@/components/ui/table";
 
 import { PostForm } from "./project-form";
@@ -58,7 +59,11 @@ export const MainForm = ({ totalBlogs, getAllBlogs, tags = [], categories = [] }
 									<TableCell className="text-muted-foreground">{new Date(blog.createdAt).toLocaleDateString()}</TableCell>
 
 									<TableCell className="text-right">
-										<EditButton setIsOpen={setIsOpen} blog={blog} setSelectedBlogs={setSelectedBlogs} />
+										<div className="flex items-center justify-end gap-1">
+											<EditButton blog={blog} setSelectedBlogs={setSelectedBlogs} setIsOpen={setIsOpen} />
+
+											<DeleteButton id={blog.id} title={blog.title} onSuccess={() => router.refresh()} />
+										</div>
 									</TableCell>
 								</TableRow>
 							))

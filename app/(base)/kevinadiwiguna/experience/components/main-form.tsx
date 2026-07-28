@@ -9,6 +9,7 @@ import { Modal } from "@/components/modal";
 import { useRouter } from "next/navigation";
 
 import { experienceProps, useModal3 } from "@/hooks/use-modal-3";
+import { DeleteButton } from "./delete-button";
 
 export const MainForm = ({ totalExperiences, allExperiences }: { totalExperiences: number; allExperiences: experienceProps[] }) => {
 	const router = useRouter();
@@ -60,6 +61,7 @@ export const MainForm = ({ totalExperiences, allExperiences }: { totalExperience
 
 									<TableCell className="text-right">
 										<EditButton setIsOpen={setIsOpen} experience={experience} setSelectedExperience={setSelectedExperience} />
+										<DeleteButton id={experience.id} title={experience.company} onSuccess={() => router.refresh()} />
 									</TableCell>
 								</TableRow>
 							))

@@ -11,6 +11,7 @@ import { useModal } from "@/hooks/use-modal";
 import { ProjectForm } from "./project-form";
 import { Modal } from "@/components/modal";
 import { useRouter } from "next/navigation";
+import { DeleteButton } from "./delete-button";
 export type totalProjectsType = {
 	id: string;
 	createdAt: Date;
@@ -85,6 +86,7 @@ export const MainForm = ({ totalProjects, getAllProjects, categories, technologi
 
 									<TableCell className="text-right">
 										<EditButton setIsOpen={setIsOpen} project={project} setSelectedProject={setSelectedProject} />
+										<DeleteButton id={project.id} title={project.title} onSuccess={() => router.refresh()} />
 									</TableCell>
 								</TableRow>
 							))

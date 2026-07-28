@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-// Helper untuk menghitung estimasi waktu baca (readTime) dalam menit
 function calculateReadTime(content: string): number {
 	const wordsPerMinute = 200;
 	const words = content.trim().split(/\s+/).length;

@@ -111,3 +111,48 @@ export async function PUT(
         );
     }
 }
+
+export async function DELETE(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        const { id } = await params;
+
+        const existingProject = await kevinadiwigunaDB.project.findUnique({
+            where: { id },
+        });
+
+        if (!existingProject) {
+            return NextResponse.json(
+                { message: "Project not found" },
+                { status: 404 }
+            );
+        }
+
+        await kevinadiwigunaDB.project.delete({
+            where: { id },
+        });
+
+        revalidatePath("/kevinadiwiguna/projects");
+
+        return NextResponse.json(
+            { message: "Project deleted successfully" },
+            { status: 200 }
+        );
+    } catch (error) {
+        console.error("[PROJECT_DELETE_ERROR]", error);
+        return NextResponse.json(
+            { message: "Internal server error" },
+            { status: 500 }
+        );
+    }
+}

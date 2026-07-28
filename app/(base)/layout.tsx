@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "@/components/ui/toast";
 
 const jetbrainsMono = JetBrains_Mono({
 	subsets: ["latin"],
@@ -42,6 +43,7 @@ export default function RootLayout({
 									<div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
 								</SidebarInset>
 							</SidebarProvider>
+							<Toaster />
 						</TooltipProvider>
 					</ThemeProvider>
 				</QueryProvider>
